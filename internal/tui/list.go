@@ -228,6 +228,7 @@ var helpRows = [][2]string{
 	{"space", "Toggle done (asks first)"},
 	{"a / e", "Add / edit"},
 	{"E", "Edit the whole task in $EDITOR"},
+	{"y / Y", "Copy the title / the whole task"},
 	{"d", "Delete (asks first)"},
 	{"u", "Undo the last delete, or bring back the one under the cursor"},
 	{"/", "Search titles"},

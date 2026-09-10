@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 
+	"todo.mirumo.net/internal/clipboard"
 	"todo.mirumo.net/internal/store"
 	"todo.mirumo.net/internal/task"
 )
@@ -73,6 +74,8 @@ type Model struct {
 	// edit hands text to the user's editor. New installs the real one; tests
 	// replace it so nothing spawns vi.
 	edit editorFunc
+	// copy puts text on the clipboard, injected for the same reason.
+	copy func(text string) error
 
 	status        string
 	err           error
@@ -120,7 +123,7 @@ func New(s store.Store, now func() time.Time, cwd string, start Start) Model {
 		store: s, now: now, cwd: cwd,
 		mode: modeList, search: ti,
 		start: start.Filter, filter: start.Filter, dates: start.Dates,
-		width: 80, height: 24, edit: execEditor, poll: defaultPoll,
+		width: 80, height: 24, edit: execEditor, copy: clipboard.Copy, poll: defaultPoll,
 	}
 }
 
@@ -225,6 +228,10 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case savedMsg:
 		m.status, m.err = msg.note, nil
 		return m, m.reloadCmd()
+
+	case copiedMsg:
+		m.status, m.err = "copied the "+string(msg), nil
+		return m, nil
 
 	case editedMsg:
 		// The view stays open on the task so the new text is there to read.
@@ -361,6 +368,15 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "E":
 		if t, ok := m.current(); ok {
 			return m, m.editTaskCmd(t)
+		}
+	// Lowercase takes the line you can see, uppercase takes everything behind it.
+	case "y":
+		if t, ok := m.current(); ok {
+			return m, m.copyCmd("title", t.Title)
+		}
+	case "Y":
+		if t, ok := m.current(); ok {
+			return m, m.copyCmd("task", m.copyText(t))
 		}
 	case "enter":
 		// With a number in front of it, enter is "go to that task": the id is

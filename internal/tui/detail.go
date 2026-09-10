@@ -151,3 +151,22 @@ func execEditor(text string, apply func(text, path string, err error) tea.Msg) t
 		return apply(edited, path, err)
 	})
 }
+
+// copyText renders a task as plain text for the clipboard: the same facts the
+// detail view shows, without the styling or the frame around them.
+func (m Model) copyText(t task.Task) string {
+	rows := m.detailRows(t)
+	var w int
+	for _, r := range rows {
+		w = max(w, lipgloss.Width(r[0]))
+	}
+	var b strings.Builder
+	fmt.Fprintf(&b, "#%d  %s\n", t.ID, t.Title)
+	for _, r := range rows {
+		b.WriteString(pad(r[0], w) + "  " + r[1] + "\n")
+	}
+	if t.Desc != "" {
+		b.WriteString("\n" + t.Desc + "\n")
+	}
+	return b.String()
+}

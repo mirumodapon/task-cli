@@ -23,6 +23,8 @@ type (
 	deletedMsg struct{ t task.Task }
 	// editedMsg carries a task that came back from the user's editor.
 	editedMsg struct{ t task.Task }
+	// copiedMsg names what went to the clipboard.
+	copiedMsg string
 )
 
 // loadCmd rereads the list, leaving the cursor on its row. That is what a
@@ -139,6 +141,18 @@ func (m Model) tagsCmd() tea.Cmd {
 			return errMsg{err}
 		}
 		return tagsMsg(ts)
+	}
+}
+
+// copyCmd puts text on the clipboard. what names it for the message afterwards:
+// a copy that says nothing is indistinguishable from a key that did nothing.
+func (m Model) copyCmd(what, text string) tea.Cmd {
+	cp := m.copy
+	return func() tea.Msg {
+		if err := cp(text); err != nil {
+			return errMsg{err}
+		}
+		return copiedMsg(what)
 	}
 }
 

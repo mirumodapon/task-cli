@@ -229,6 +229,7 @@ the one flag `ls` has that `tui` does not — the interface always colours.
 | `space` | Toggle done (asks first) |
 | `a` / `e` | Add / edit |
 | `E` | Edit the whole task in $EDITOR |
+| `y` / `Y` | Copy the title / the whole task |
 | `d` | Delete (asks first) |
 | `u` | Undo the last delete, or bring back the one under the cursor |
 | `/` | Search titles |
@@ -290,6 +291,11 @@ off the edge.
 
 `enter` opens the same fields full screen, which is how to read a description
 the pane had to cut. Any key but `E` closes it again.
+
+`y` copies the title of the task under the cursor, `Y` copies the whole of it —
+the same fields the detail view shows, as plain text. The clipboard is reached
+through whatever the machine has: `pbcopy`, `wl-copy`, `xclip`, `xsel` or
+`clip.exe`, tried in that order. A machine with none of them says so.
 
 ### Adding and editing
 
@@ -541,6 +547,7 @@ Dependencies point inward, and the inner packages perform no IO.
 | `internal/project` | Turns a directory into a project path. |
 | `internal/store` | The `Store` interface and its SQLite implementation. |
 | `internal/editor` | Hands text to `$EDITOR` and reads back what came out. |
+| `internal/clipboard` | Hands text to the system clipboard tool. |
 | `internal/taskfile` | Renders a task as an editable file and parses it back. |
 | `internal/cli` | Subcommands, flags, output formatting. |
 | `internal/tui` | Bubble Tea model, update, view. |
