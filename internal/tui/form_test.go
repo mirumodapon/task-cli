@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	tea "github.com/charmbracelet/bubbletea"
+
 	"todo.mirumo.net/internal/task"
 )
 
@@ -156,6 +158,8 @@ func TestFormFillsProjectFromCwd(t *testing.T) {
 
 func TestHelpOverlay(t *testing.T) {
 	m, _ := newModel(t)
+	// Tall enough to hold the whole table; that a short one scrolls is its own test.
+	m, _ = send(t, m, tea.WindowSizeMsg{Width: 80, Height: 60})
 	m = press(t, m, "?")
 	if m.mode != modeHelp {
 		t.Fatal("? should open the help")

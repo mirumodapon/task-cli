@@ -226,30 +226,31 @@ the one flag `ls` has that `tui` does not — the interface always colours.
 | `5j` / `5k` | Move that many rows |
 | `12 enter` | Go to task 12 |
 | `enter` | Show the full task |
+| `v` | Show or hide the detail pane |
+| `D` | Switch between time remaining and dates |
 | `space` | Toggle done (asks first) |
 | `a` / `e` | Add / edit |
 | `E` | Edit the whole task in $EDITOR |
-| `y` / `Y` | Copy the title / the whole task |
-| `p` | New task from the clipboard |
 | `d` | Delete (asks first) |
 | `u` | Undo the last delete, or bring back the one under the cursor |
+| `y` / `Y` | Copy the title / the whole task |
+| `p` | New task from the clipboard |
 | `/` | Search titles |
 | `P` / `T` | Filter by project / tag |
 | `A` | Show or hide done tasks |
 | `s` | Choose the order |
 | `r` | Reverse the order |
-| `D` | Switch between time remaining and dates |
-| `v` | Show or hide the detail pane |
+| `esc` | Back to the filter it opened on |
 | `R` | Reread the database now |
 | `ctrl+z` | Suspend to the shell |
-| `esc` | Back to the filter it opened on |
 | `?` | This help |
 | `q` | Quit (asks first) |
 | `ctrl+c` / `ctrl+d` | Quit (press twice) |
 
-`?` shows that table without leaving the list. On a terminal too short to hold
-it all it scrolls with `j`/`k` and says so, rather than quietly dropping the row
-that tells you how to leave.
+`?` shows that table without leaving the list, grouped by what the keys are
+for — moving, looking, changing, the clipboard, finding, and leaving. On a
+terminal too short to hold it all it scrolls with `j`/`k` and says so, rather
+than quietly dropping the row that tells you how to leave.
 
 `ctrl+n` and `ctrl+p` move everywhere, including the places where `j` and `k`
 are text: while searching they walk the results without leaving the field, and

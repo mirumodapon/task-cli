@@ -512,12 +512,12 @@ func (m Model) updateHelp(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	case "g":
 		m.helpOffset = 0
 	case "G":
-		m.helpOffset = len(helpRows)
+		m.helpOffset = len(helpLines())
 	default:
 		m.mode = modeList
 		return m, nil
 	}
-	m.helpOffset = max(0, min(m.helpOffset, len(helpRows)-fit))
+	m.helpOffset = max(0, min(m.helpOffset, len(helpLines())-fit))
 	return m, nil
 }
 

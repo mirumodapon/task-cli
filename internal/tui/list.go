@@ -218,64 +218,109 @@ func itoa(n int64) string { return strconv.FormatInt(n, 10) }
 
 // helpRows is the one list of keys. The README quotes it, and a test checks
 // the two agree, so the documentation cannot drift from the bindings.
-var helpRows = [][2]string{
-	{"j / k / ↑ / ↓", "Move"},
-	{"ctrl+n / ctrl+p", "Move, including while typing"},
-	{"g / G", "Jump to top / bottom"},
-	{"5j / 5k", "Move that many rows"},
-	{"12 enter", "Go to task 12"},
-	{"enter", "Show the full task"},
-	{"space", "Toggle done (asks first)"},
-	{"a / e", "Add / edit"},
-	{"E", "Edit the whole task in $EDITOR"},
-	{"y / Y", "Copy the title / the whole task"},
-	{"p", "New task from the clipboard"},
-	{"d", "Delete (asks first)"},
-	{"u", "Undo the last delete, or bring back the one under the cursor"},
-	{"/", "Search titles"},
-	{"P / T", "Filter by project / tag"},
-	{"A", "Show or hide done tasks"},
-	{"s", "Choose the order"},
-	{"r", "Reverse the order"},
-	{"D", "Switch between time remaining and dates"},
-	{"v", "Show or hide the detail pane"},
-	{"R", "Reread the database now"},
-	{"ctrl+z", "Suspend to the shell"},
-	{"esc", "Back to the filter it opened on"},
-	{"?", "This help"},
-	{"q", "Quit (asks first)"},
-	{"ctrl+c / ctrl+d", "Quit (press twice)"},
+var helpGroups = []struct {
+	name string
+	rows [][2]string
+}{
+	{"Moving", [][2]string{
+		{"j / k / ↑ / ↓", "Move"},
+		{"ctrl+n / ctrl+p", "Move, including while typing"},
+		{"g / G", "Jump to top / bottom"},
+		{"5j / 5k", "Move that many rows"},
+		{"12 enter", "Go to task 12"},
+	}},
+	{"Looking", [][2]string{
+		{"enter", "Show the full task"},
+		{"v", "Show or hide the detail pane"},
+		{"D", "Switch between time remaining and dates"},
+	}},
+	{"Changing", [][2]string{
+		{"space", "Toggle done (asks first)"},
+		{"a / e", "Add / edit"},
+		{"E", "Edit the whole task in $EDITOR"},
+		{"d", "Delete (asks first)"},
+		{"u", "Undo the last delete, or bring back the one under the cursor"},
+	}},
+	{"Clipboard", [][2]string{
+		{"y / Y", "Copy the title / the whole task"},
+		{"p", "New task from the clipboard"},
+	}},
+	{"Finding", [][2]string{
+		{"/", "Search titles"},
+		{"P / T", "Filter by project / tag"},
+		{"A", "Show or hide done tasks"},
+		{"s", "Choose the order"},
+		{"r", "Reverse the order"},
+		{"esc", "Back to the filter it opened on"},
+	}},
+	{"Leaving, and the rest", [][2]string{
+		{"R", "Reread the database now"},
+		{"ctrl+z", "Suspend to the shell"},
+		{"?", "This help"},
+		{"q", "Quit (asks first)"},
+		{"ctrl+c / ctrl+d", "Quit (press twice)"},
+	}},
 }
 
-// helpFit is how many key rows the screen has room for: the frame less the
-// title, the blank line under it, and the blank line above the hint.
-func (m Model) helpFit() int { return max(1, m.height-4) }
+// helpRows is every binding in order, which is what the README table holds.
+var helpRows = flattenHelp()
 
-// helpWindow is the slice of the table on screen, and whether there is more of
-// it. The list of keys has outgrown a short terminal, and a help that quietly
-// drops the row telling you how to leave is worse than no help.
-func (m Model) helpWindow() ([][2]string, bool) {
-	fit := m.helpFit()
-	if fit >= len(helpRows) {
-		return helpRows, false
+func flattenHelp() [][2]string {
+	var out [][2]string
+	for _, g := range helpGroups {
+		out = append(out, g.rows...)
 	}
-	start := min(m.helpOffset, len(helpRows)-fit)
-	return helpRows[start : start+fit], true
+	return out
 }
 
-func (m Model) viewHelp() string {
-	rows, scrolls := m.helpWindow()
+// helpFit is how many lines the screen has room for: the frame less the blank
+// line above the hint and the hint itself. There is no title — you pressed ?
+// to get here, and the group headings say what the screen is.
+func (m Model) helpFit() int { return max(1, m.height-2) }
+
+// helpLines renders the whole table, groups and all. Scrolling then works on
+// lines rather than on bindings, so a heading travels with the keys under it.
+func helpLines() []string {
 	// As in the form, the key column is derived rather than hard-coded, so a
 	// longer binding cannot run into its description. It comes from the whole
-	// table, not the visible part, so the column does not shift as it scrolls.
+	// table, so the column does not shift as it scrolls.
 	var w int
 	for _, r := range helpRows {
 		w = max(w, lipgloss.Width(r[0]))
 	}
+	var out []string
+	for i, g := range helpGroups {
+		if i > 0 {
+			out = append(out, "")
+		}
+		out = append(out, styleCursor.Render(g.name))
+		for _, r := range g.rows {
+			out = append(out, "  "+pad(r[0], w+2)+r[1])
+		}
+	}
+	return out
+}
+
+// helpWindow is the slice on screen, and whether there is more of it. The list
+// of keys has outgrown a short terminal, and a help that quietly drops the row
+// telling you how to leave is worse than no help.
+func (m Model) helpWindow() ([]string, bool) {
+	lines := helpLines()
+	fit := m.helpFit()
+	if fit >= len(lines) {
+		return lines, false
+	}
+	start := min(m.helpOffset, len(lines)-fit)
+	return lines[start : start+fit], true
+}
+
+func (m Model) viewHelp() string {
+	lines, scrolls := m.helpWindow()
 	var b strings.Builder
-	b.WriteString("Keys\n\n")
-	for _, r := range rows {
-		b.WriteString("  " + pad(r[0], w+2) + r[1] + "\n")
+	for _, l := range lines {
+		// Cut rather than wrap: a wrapped description would push the row below
+		// it out of the frame, which is the one thing the layout promises.
+		b.WriteString(clip(l, m.width) + "\n")
 	}
 	hint := "Press any key to go back"
 	if scrolls {
