@@ -507,11 +507,8 @@ task --db /tmp/scratch.db ls    # somewhere else, once
 TASK_DB=/tmp/scratch.db task ls # or for the whole session
 ```
 
-`--db` wins over `$TASK_DB`. `TODO_DB`, the variable's old name, is still read
-when `TASK_DB` is not set: a shell that still exports it would otherwise start
-pointing at a different database without saying anything, which looks exactly
-like lost data. Both are ordinary SQLite files, so `sqlite3` reads them and
-copying one is a backup.
+`--db` wins over `$TASK_DB`. Both are ordinary SQLite files, so `sqlite3` reads
+them and copying one is a backup.
 
 A database written by an older build is brought forward when it is opened: a
 column added since is added on the way in, so upgrading is nothing more than
