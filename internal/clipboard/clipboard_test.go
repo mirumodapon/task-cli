@@ -74,3 +74,25 @@ func TestCopyReportsAFailingTool(t *testing.T) {
 		t.Error("a tool that fails should be an error")
 	}
 }
+
+func TestPasteReadsTheToolsOutput(t *testing.T) {
+	fakeTool(t, "pbpaste", `printf 'from the clipboard'`)
+	got, err := Paste()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "from the clipboard" {
+		t.Errorf("= %q", got)
+	}
+}
+
+func TestPasteWithoutAnyToolSaysWhatItLookedFor(t *testing.T) {
+	t.Setenv("PATH", t.TempDir())
+	_, err := Paste()
+	if err == nil {
+		t.Fatal("it should be an error")
+	}
+	if !strings.Contains(err.Error(), "pbpaste") {
+		t.Errorf("the message should name the tools: %v", err)
+	}
+}

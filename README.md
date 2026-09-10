@@ -230,6 +230,7 @@ the one flag `ls` has that `tui` does not — the interface always colours.
 | `a` / `e` | Add / edit |
 | `E` | Edit the whole task in $EDITOR |
 | `y` / `Y` | Copy the title / the whole task |
+| `p` | New task from the clipboard |
 | `d` | Delete (asks first) |
 | `u` | Undo the last delete, or bring back the one under the cursor |
 | `/` | Search titles |
@@ -293,9 +294,15 @@ off the edge.
 the pane had to cut. Any key but `E` closes it again.
 
 `y` copies the title of the task under the cursor, `Y` copies the whole of it —
-the same fields the detail view shows, as plain text. The clipboard is reached
-through whatever the machine has: `pbcopy`, `wl-copy`, `xclip`, `xsel` or
-`clip.exe`, tried in that order. A machine with none of them says so.
+the same fields the detail view shows, as plain text. `p` is the other half of
+the pair: it opens the add form with the clipboard as the title, so a line from
+somewhere else becomes a task without being retyped. A title is one line, so
+several pasted lines are folded into one rather than losing everything after the
+first.
+
+The clipboard is reached through whatever the machine has: `pbcopy` / `pbpaste`,
+`wl-copy` / `wl-paste`, `xclip`, `xsel` or `clip.exe`, tried in that order. A
+machine with none of them says so.
 
 ### Adding and editing
 

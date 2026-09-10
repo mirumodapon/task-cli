@@ -25,6 +25,8 @@ type (
 	editedMsg struct{ t task.Task }
 	// copiedMsg names what went to the clipboard.
 	copiedMsg string
+	// pastedMsg carries what was on it.
+	pastedMsg string
 )
 
 // loadCmd rereads the list, leaving the cursor on its row. That is what a
@@ -153,6 +155,19 @@ func (m Model) copyCmd(what, text string) tea.Cmd {
 			return errMsg{err}
 		}
 		return copiedMsg(what)
+	}
+}
+
+// pasteCmd reads the clipboard. Like every other read, it happens in a cmd:
+// Update stays a pure function of the messages it is handed.
+func (m Model) pasteCmd() tea.Cmd {
+	read := m.paste
+	return func() tea.Msg {
+		text, err := read()
+		if err != nil {
+			return errMsg{err}
+		}
+		return pastedMsg(text)
 	}
 }
 

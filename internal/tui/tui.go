@@ -3,6 +3,7 @@ package tui
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -74,8 +75,10 @@ type Model struct {
 	// edit hands text to the user's editor. New installs the real one; tests
 	// replace it so nothing spawns vi.
 	edit editorFunc
-	// copy puts text on the clipboard, injected for the same reason.
-	copy func(text string) error
+	// copy puts text on the clipboard, injected for the same reason. paste reads
+	// it back.
+	copy  func(text string) error
+	paste func() (string, error)
 
 	status        string
 	err           error
@@ -123,7 +126,9 @@ func New(s store.Store, now func() time.Time, cwd string, start Start) Model {
 		store: s, now: now, cwd: cwd,
 		mode: modeList, search: ti,
 		start: start.Filter, filter: start.Filter, dates: start.Dates,
-		width: 80, height: 24, edit: execEditor, copy: clipboard.Copy, poll: defaultPoll,
+		width: 80, height: 24,
+		edit: execEditor, copy: clipboard.Copy, paste: clipboard.Paste,
+		poll: defaultPoll,
 	}
 }
 
@@ -231,6 +236,18 @@ func (m Model) update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case copiedMsg:
 		m.status, m.err = "copied the "+string(msg), nil
+		return m, nil
+
+	case pastedMsg:
+		// A title is one line, so a pasted paragraph is folded into one rather
+		// than losing everything after the first newline.
+		title := strings.Join(strings.Fields(string(msg)), " ")
+		if title == "" {
+			m.status, m.err = "the clipboard is empty", nil
+			return m, nil
+		}
+		m = m.openForm(task.Task{Title: title}, false)
+		m.status, m.err = "", nil
 		return m, nil
 
 	case editedMsg:
@@ -378,6 +395,9 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		if t, ok := m.current(); ok {
 			return m, m.copyCmd("task", m.copyText(t))
 		}
+	// The other half of the pair: what y took out, p brings in.
+	case "p":
+		return m, m.pasteCmd()
 	case "enter":
 		// With a number in front of it, enter is "go to that task": the id is
 		// what the rest of the program answers to, so it is what you can aim at.

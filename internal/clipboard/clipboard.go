@@ -42,3 +42,32 @@ func Copy(text string) error {
 	}
 	return fmt.Errorf("no clipboard tool found (looked for %s)", strings.Join(names, ", "))
 }
+
+// readers are the ways to read a clipboard, paired with the writers above.
+var readers = [][]string{
+	{"pbpaste"},
+	{"wl-paste", "--no-newline"},
+	{"xclip", "-selection", "clipboard", "-o"},
+	{"xsel", "--clipboard", "--output"},
+	{"powershell.exe", "-NoProfile", "-Command", "Get-Clipboard"},
+}
+
+// Paste returns what is on the clipboard.
+func Paste() (string, error) {
+	for _, t := range readers {
+		path, err := exec.LookPath(t[0])
+		if err != nil {
+			continue
+		}
+		out, err := exec.Command(path, t[1:]...).Output()
+		if err != nil {
+			return "", fmt.Errorf("%s: %w", t[0], err)
+		}
+		return string(out), nil
+	}
+	names := make([]string, 0, len(readers))
+	for _, t := range readers {
+		names = append(names, t[0])
+	}
+	return "", fmt.Errorf("no clipboard tool found (looked for %s)", strings.Join(names, ", "))
+}
