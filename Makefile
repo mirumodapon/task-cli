@@ -7,6 +7,12 @@ CMD    := ./cmd/task
 BIN    := bin
 GOBIN  ?= $(shell go env GOPATH)/bin
 
+# The version is asked of git rather than written down: a constant in the source
+# is a thing to forget, and a forgotten one lies. On the tag this is "v1.0.0",
+# past it "v1.0.0-3-gabc1234", and with uncommitted changes it says "-dirty".
+VERSION := $(shell git describe --tags --dirty --always 2>/dev/null || echo devel)
+LDFLAGS := -X main.version=$(VERSION)
+
 # Arguments forwarded by "make run", e.g. make run ARGS="ls -a"
 ARGS ?=
 
@@ -20,10 +26,10 @@ help: ## Show this help
 
 build: ## Build the binary into bin/
 	@mkdir -p $(BIN)
-	go build -o $(BIN)/$(BINARY) $(CMD)
+	go build -ldflags "$(LDFLAGS)" -o $(BIN)/$(BINARY) $(CMD)
 
 install: ## Install the binary into GOBIN
-	go install $(CMD)
+	go install -ldflags "$(LDFLAGS)" $(CMD)
 
 run: ## Run without installing, e.g. make run ARGS="ls -a"
 	go run $(CMD) $(ARGS)

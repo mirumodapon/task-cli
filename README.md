@@ -43,12 +43,22 @@ make build            # produces ./bin/task
 There is no cgo: the SQLite driver is pure Go, so a plain `go build` is enough
 on any platform Go targets.
 
-`task --version` reports the revision it was built from. Release builds can
-stamp a version instead:
+`task --version` reports the version:
 
-```sh
-go build -ldflags "-X main.version=v1.2.3" ./cmd/task
 ```
+$ task --version
+task v1.0.0
+built with go1.26.4 for darwin/arm64
+```
+
+`make build` and `make install` ask git for it — `git describe --tags --dirty`
+— so a build from the tag says `v1.0.0`, one three commits past it says
+`v1.0.0-3-gabc1234`, and one with uncommitted changes says `-dirty`. A version
+written into the source would be a thing to forget, and a forgotten one lies.
+
+A `go build` that skips the Makefile has nothing stamped into it and falls back
+to what the build info knows: the revision it came from, or the module version
+when there is no repository to ask.
 
 ## Commands
 
