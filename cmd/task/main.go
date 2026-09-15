@@ -141,7 +141,7 @@ func wantsVersion(args []string) bool {
 // VCS information, which is what "go install module@version" produces, falls
 // back to the module version.
 func versionString(stamped string, bi *debug.BuildInfo, ok bool) string {
-	if stamped != "" {
+	if stamped != "" && !ok {
 		return stamped
 	}
 	if !ok {
@@ -158,14 +158,22 @@ func versionString(stamped string, bi *debug.BuildInfo, ok bool) string {
 			modified = s.Value == "true"
 		}
 	}
+	if len(revision) > 7 {
+		revision = revision[:7]
+	}
+	if stamped != "" {
+		// The revision says which commit this actually is. It does not repeat
+		// the dirtiness: whatever stamped the version already said so.
+		if revision == "" {
+			return stamped
+		}
+		return stamped + " (" + revision + ")"
+	}
 	if revision == "" {
 		if v := bi.Main.Version; v != "" && v != "(devel)" {
 			return v
 		}
 		return "devel"
-	}
-	if len(revision) > 7 {
-		revision = revision[:7]
 	}
 	if modified {
 		return fmt.Sprintf("devel (%s, modified)", revision)

@@ -47,9 +47,12 @@ on any platform Go targets.
 
 ```
 $ task --version
-task v1.0.0
+task v1.0.0 (a1b2c3d)
 built with go1.26.4 for darwin/arm64
 ```
+
+The hash in brackets is the commit it was built from, which is what turns
+"v1.0.0" into something you can go and look at.
 
 `make build` and `make install` ask git for it — `git describe --tags --dirty`
 — so a build from the tag says `v1.0.0`, one three commits past it says

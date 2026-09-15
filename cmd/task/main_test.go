@@ -80,6 +80,24 @@ func TestVersionString(t *testing.T) {
 			want:    "v2.0.0",
 		},
 		{
+			name:    "a stamped version carries the revision it was built from",
+			stamped: "v1.0.0",
+			bi:      buildInfo("(devel)", map[string]string{"vcs.revision": "408e33bdeadbeef"}),
+			ok:      true,
+			want:    "v1.0.0 (408e33b)",
+		},
+		{
+			// git describe already says -dirty, so the revision does not repeat it.
+			name:    "a stamped version does not say dirty twice",
+			stamped: "v1.0.0-dirty",
+			bi: buildInfo("(devel)", map[string]string{
+				"vcs.revision": "408e33bdeadbeef",
+				"vcs.modified": "true",
+			}),
+			ok:   true,
+			want: "v1.0.0-dirty (408e33b)",
+		},
+		{
 			name: "a module version is used when installed",
 			bi:   buildInfo("v1.0.0", nil),
 			ok:   true,
