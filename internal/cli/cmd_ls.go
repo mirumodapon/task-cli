@@ -8,12 +8,12 @@ import (
 	"todo.mirumo.net/internal/task"
 )
 
-// listFlags are the flags ls and tui share: everything that narrows the list,
-// plus --dates, which chooses how a due date reads in both.
-func listFlags() []argparse.Spec {
+// filterFlags are what narrows a list. ls, tui and export all take them, so no
+// two of them can come to disagree about what -d or --pri means.
+func filterFlags() []argparse.Spec {
 	return []argparse.Spec{
 		argparse.Spec{Long: "project", Short: "p", Kind: argparse.OptionalString, Usage: "Only this project; uses the current directory when given no value"},
-		argparse.Spec{Long: "no-project", Kind: argparse.Bool, Usage: "Only uncategorized tasks (the default)"},
+		argparse.Spec{Long: "no-project", Kind: argparse.Bool, Usage: "Only uncategorized tasks"},
 		argparse.Spec{Long: "all-projects", Kind: argparse.Bool, Usage: "Every task, whatever its project"},
 		argparse.Spec{Long: "tag", Short: "t", Kind: argparse.StringSlice, Usage: "Tag; repeatable, matches tasks having all of them"},
 		argparse.Spec{Long: "due", Short: "d", Kind: argparse.String, Usage: "today, week, overdue, or a date"},
@@ -23,8 +23,15 @@ func listFlags() []argparse.Spec {
 		argparse.Spec{Long: "deleted", Kind: argparse.Bool, Usage: "Only deleted tasks, the ones rm put aside"},
 		argparse.Spec{Long: "sort", Short: "s", Kind: argparse.String, Usage: "Sort by: id (default), due, pri"},
 		argparse.Spec{Long: "reverse", Short: "r", Kind: argparse.Bool, Usage: "Reverse whatever order is in force"},
-		argparse.Spec{Long: "dates", Kind: argparse.Bool, Usage: "Show due dates instead of the time remaining"},
 	}
+}
+
+// listFlags adds what ls and tui show with, which a dump has no use for: its
+// formats carry their own dates.
+func listFlags() []argparse.Spec {
+	return append(filterFlags(),
+		argparse.Spec{Long: "dates", Kind: argparse.Bool, Usage: "Show due dates instead of the time remaining"},
+	)
 }
 
 func lsFlags() *argparse.Set {

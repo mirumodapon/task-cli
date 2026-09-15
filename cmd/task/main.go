@@ -67,6 +67,7 @@ func run() int {
 		Store: st,
 		Out:   os.Stdout,
 		Err:   os.Stderr,
+		In:    os.Stdin,
 		Now:   time.Now,
 		Cwd:   cwd,
 		Color: resolveColor(os.Getenv("NO_COLOR"), os.Getenv("CLICOLOR_FORCE"), isTTY(os.Stdout)),

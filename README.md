@@ -74,6 +74,8 @@ task undone <id>...             Mark tasks as not done
 task edit <id> [new title]      Change a task
 task rm <id>...                 Delete tasks; -f destroys them
 task restore <id>...            Bring deleted tasks back
+task export, dump [flags]       Write tasks out as txt, json, yaml or sql
+task import [file]              Read a json or yaml dump back in
 task projects                   Projects with their open counts
 task tags                       Tags that are in use
 task tui                        Open the interactive interface
@@ -92,6 +94,44 @@ task mcp                        Serve the task list over MCP on stdin/stdout
 | `-d`, `--due` | `today`, `tomorrow`, `fri`, `+3d`, `+2w`, `2026-09-01`, each optionally with a time (`today 15:00`). A bare `18:00` means today. |
 | `--pri` | `low`, `med`, `high`, or the marks a listing shows: `!`, `!!`, `!!!`. Quote the marks — most shells treat `!!` as history expansion: `--pri '!!!'`. |
 | `--desc` | The long form of the task, over as many lines as it takes. With no value it opens `$EDITOR`; with one it takes the value. Listings show only the title; `task details` and `enter` in the TUI show it. |
+
+### Export and import
+
+`export` (or `dump`, the same command) writes tasks to a file or to standard
+output. It takes the same filters `ls` does, but not its defaults: a backup that
+quietly left out everything done, deleted, or belonging to a project would be a
+poor thing to have trusted.
+
+```sh
+task export -o tasks.json          # everything, as json
+task export -o tasks.yaml          # the extension picks the format
+task export -f sql > tasks.sql     # or -f says which
+task export -t urgent -f txt       # the ls filters still narrow it
+```
+
+| Format | For |
+|---|---|
+| `json` | The default. Reads back with `import`. |
+| `yaml` | The same fields, easier to read. Reads back with `import`. |
+| `sql` | `INSERT` statements against the real schema: `sqlite3 tasks.db < tasks.sql`. |
+| `txt` | For people. It does not read back, and says so if you try. |
+
+`import` takes json or yaml, from a file or from standard input:
+
+```sh
+task import tasks.json
+task export -f yaml | task --db /tmp/copy.db import -f yaml
+```
+
+The tasks are added rather than restored over, so importing the same file twice
+gives you it twice. Ids are the importing list's to give: the ones in the file
+belong to the list that wrote them, and two lists have no reason to agree about
+which task is #3. An `sql` dump is the one that keeps them, because it is the
+database's own statements — restore it with `sqlite3` into an empty task
+database rather than through `import`.
+
+A file that turns out not to be a dump changes nothing: it is read through
+before anything is written.
 
 ### Deleting
 
@@ -569,6 +609,7 @@ Dependencies point inward, and the inner packages perform no IO.
 | `internal/datearg` | Due date parsing and display. |
 | `internal/project` | Turns a directory into a project path. |
 | `internal/store` | The `Store` interface and its SQLite implementation. |
+| `internal/dump` | The formats tasks travel in: txt, json, yaml, sql. |
 | `internal/editor` | Hands text to `$EDITOR` and reads back what came out. |
 | `internal/clipboard` | Hands text to the system clipboard tool. |
 | `internal/taskfile` | Renders a task as an editable file and parses it back. |

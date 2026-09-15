@@ -21,6 +21,8 @@ type App struct {
 	Store store.Store
 	Out   io.Writer
 	Err   io.Writer
+	// In is where import reads a dump from when it is given no file.
+	In    io.Reader
 	Now   func() time.Time
 	Cwd   string
 	Color bool
@@ -99,6 +101,8 @@ func (a *App) commandList() []command {
 		{name: "edit", args: "<id> [new title]", summary: "Change a task. Only the fields you pass are touched.", flags: addFlags, run: a.cmdEdit},
 		{name: "rm", args: "<id>...", summary: "Delete tasks. The row stays until -f, so a delete can be taken back.", flags: rmFlags, run: a.cmdRm},
 		{name: "restore", args: "<id>...", summary: "Bring deleted tasks back.", run: a.cmdRestore},
+		{name: "export", aliases: []string{"dump"}, summary: "Write tasks out as txt, json, yaml or sql.", flags: exportFlags, run: a.cmdExport},
+		{name: "import", args: "[file]", summary: "Read a json or yaml dump back in, as new tasks.", flags: importFlags, run: a.cmdImport},
 		{name: "projects", summary: "List projects with their open task counts.", run: a.cmdProjects},
 		{name: "tags", summary: "List tags that are in use.", run: a.cmdTags},
 		{name: "tui", summary: "Open the interactive interface, on the same filters ls takes.", flags: tuiFlags, run: a.cmdTUI},
