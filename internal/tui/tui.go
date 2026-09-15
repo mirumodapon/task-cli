@@ -52,6 +52,8 @@ type Model struct {
 	quitArmed bool
 	// helpOffset scrolls the key table, which no longer fits a short terminal.
 	helpOffset int
+	// detailOffset scrolls the open task, whose description can be any length.
+	detailOffset int
 	// paneOff hides the detail pane. The zero value shows it wherever the
 	// terminal has room, so the default needs no wiring.
 	paneOff bool
@@ -84,6 +86,9 @@ type Model struct {
 	err           error
 	width, height int
 }
+
+// halfPage is what ctrl+d and ctrl+u move: half the rows on screen, at least one.
+func (m Model) halfPage() int { return max(1, m.listHeight()/2) }
 
 // listHeight is how many task rows fit: the frame less the header, the blank
 // line under it, and the blank line above the hint — less the pane and its rule
@@ -352,14 +357,20 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	// q is a decision rather than a reflex, so it keeps the question.
 	case "q":
 		return m.askQuit(), nil
-	// ctrl+d is the shell's "nothing more to type", which only means that where
-	// nothing is being typed; in a field it stays a text key.
-	case "ctrl+d":
-		return m.armQuit()
+
 	case "j", "down", "ctrl+n":
 		m.moveCursor(n)
 	case "k", "up", "ctrl+p":
 		m.moveCursor(-n)
+	// The vi pages. A count makes no sense in front of them, so n is ignored.
+	case "ctrl+f", "pgdown":
+		m.moveCursor(m.listHeight())
+	case "ctrl+b", "pgup":
+		m.moveCursor(-m.listHeight())
+	case "ctrl+d":
+		m.moveCursor(m.halfPage())
+	case "ctrl+u":
+		m.moveCursor(-m.halfPage())
 	case "g":
 		m.cursor = 0
 	case "G":
@@ -405,7 +416,7 @@ func (m Model) updateList(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 			return m.jumpTo(int64(n)), nil
 		}
 		if _, ok := m.current(); ok {
-			m.mode = modeDetail
+			m.mode, m.detailOffset = modeDetail, 0
 		}
 		return m, nil
 	case "?":

@@ -29,19 +29,13 @@ func (m Model) askQuit() Model {
 	return m.askConfirm("Quit? (y/n)", tea.Quit)
 }
 
-// quitAgain is what the screen says while a way out is half pressed.
+// quitAgain is what the screen says while the way out is half pressed.
 const quitAgain = "press ctrl+c again to quit"
 
-// isQuitKey reports whether this key is one of the ways out, here and now:
-// ctrl+d only counts where nothing is being typed into.
+// isQuitKey reports whether this key is a way out. Only ctrl+c is: ctrl+d pages
+// through the list, which it cannot also do while meaning "leave".
 func (m Model) isQuitKey(msg tea.KeyMsg) bool {
-	switch msg.String() {
-	case "ctrl+c":
-		return true
-	case "ctrl+d":
-		return m.mode == modeList
-	}
-	return false
+	return msg.String() == "ctrl+c"
 }
 
 // armQuit answers a reflex with a warning rather than a question. The first

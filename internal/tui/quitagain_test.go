@@ -9,35 +9,21 @@ import (
 // thing to read at the moment you have already decided to go; the second press
 // is the confirmation.
 func TestCtrlCQuitsOnTheSecondPress(t *testing.T) {
-	for _, key := range []string{"ctrl+c", "ctrl+d"} {
-		t.Run(key, func(t *testing.T) {
-			m, _ := newModel(t)
-			next, cmd := m.Update(keyMsg(key))
-			m = next.(Model)
-			if quits(t, m, cmd) {
-				t.Fatalf("%s should not quit on the first press", key)
-			}
-			if m.mode != modeList {
-				t.Fatalf("and should not open a question, mode = %v", m.mode)
-			}
-			if !strings.Contains(m.View(), "again") {
-				t.Errorf("the hint should say what a second press does:\n%s", m.View())
-			}
-			_, cmd = m.Update(keyMsg(key))
-			if !quits(t, m, cmd) {
-				t.Errorf("%s twice should quit", key)
-			}
-		})
-	}
-}
-
-// Either key finishes what the other started: they are the same door.
-func TestCtrlDThenCtrlCQuits(t *testing.T) {
 	m, _ := newModel(t)
-	next, _ := m.Update(keyMsg("ctrl+d"))
-	_, cmd := next.(Model).Update(keyMsg("ctrl+c"))
+	next, cmd := m.Update(keyMsg("ctrl+c"))
+	m = next.(Model)
+	if quits(t, m, cmd) {
+		t.Fatal("ctrl+c should not quit on the first press")
+	}
+	if m.mode != modeList {
+		t.Fatalf("and should not open a question, mode = %v", m.mode)
+	}
+	if !strings.Contains(m.View(), "again") {
+		t.Errorf("the hint should say what a second press does:\n%s", m.View())
+	}
+	_, cmd = m.Update(keyMsg("ctrl+c"))
 	if !quits(t, m, cmd) {
-		t.Error("the second press should quit whichever key it was")
+		t.Error("ctrl+c twice should quit")
 	}
 }
 

@@ -17,10 +17,12 @@ func helpOn(t *testing.T, w, h int) Model {
 
 // The last row of the help is the one most likely to be cut, and the one that
 // says how to leave.
-const lastHelpRow = "ctrl+c / ctrl+d"
+const lastHelpRow = "Quit (press twice)"
 
 func TestTheHelpFitsATallTerminal(t *testing.T) {
-	m := helpOn(t, 80, 40)
+	// Taller than the table, which keeps growing; that a short one scrolls is
+	// the next test's business.
+	m := helpOn(t, 80, len(helpLines())+4)
 	v := m.View()
 	for _, r := range helpRows {
 		if !strings.Contains(v, r[0]) {

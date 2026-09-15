@@ -237,6 +237,8 @@ the one flag `ls` has that `tui` does not — the interface always colours.
 | `ctrl+n` / `ctrl+p` | Move, including while typing |
 | `g` / `G` | Jump to top / bottom |
 | `5j` / `5k` | Move that many rows |
+| `ctrl+f` / `ctrl+b` | A page forward / back |
+| `ctrl+d` / `ctrl+u` | Half a page down / up |
 | `12 enter` | Go to task 12 |
 | `enter` | Show the full task |
 | `v` | Show or hide the detail pane |
@@ -258,7 +260,7 @@ the one flag `ls` has that `tui` does not — the interface always colours.
 | `ctrl+z` | Suspend to the shell |
 | `?` | This help |
 | `q` | Quit (asks first) |
-| `ctrl+c` / `ctrl+d` | Quit (press twice) |
+| `ctrl+c` | Quit (press twice) |
 
 `?` shows that table without leaving the list, grouped by what the keys are
 for — moving, looking, changing, the clipboard, finding, and leaving. On a
@@ -305,7 +307,8 @@ back. A description too long for the pane is cut with a marker rather than run
 off the edge.
 
 `enter` opens the same fields full screen, which is how to read a description
-the pane had to cut. Any key but `E` closes it again.
+the pane had to cut. There the movement keys scroll it, `E` edits it, and
+anything else closes it — the same bargain `?` makes.
 
 `y` copies the title of the task under the cursor, `Y` copies the whole of it —
 the same fields the detail view shows, as plain text. `p` is the other half of
@@ -400,10 +403,9 @@ so a mistyped key cannot confirm. The question is asked at the bottom of
 whatever screen you were on, so cancelling leaves you in your half-typed form
 rather than somewhere else.
 
-`ctrl+c` and `ctrl+d` are reflexes rather than decisions, and meet a warning
-instead of a question: the first press says what a second one does, the second
-one goes, and any key in between puts it back. `ctrl+c` works from anywhere,
-while `ctrl+d` is a text key wherever text is being typed, as it is in a shell.
+`ctrl+c` is a reflex rather than a decision, and meets a warning instead of a
+question: the first press says what a second one does, the second one goes, and
+any key in between puts it back. It works from anywhere.
 
 `d` puts a task aside rather than destroying it, so `u` brings it back — and
 unlike an in-memory undo, so does `task restore 3` tomorrow. Opened on the bin

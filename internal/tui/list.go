@@ -227,6 +227,8 @@ var helpGroups = []struct {
 		{"ctrl+n / ctrl+p", "Move, including while typing"},
 		{"g / G", "Jump to top / bottom"},
 		{"5j / 5k", "Move that many rows"},
+		{"ctrl+f / ctrl+b", "A page forward / back"},
+		{"ctrl+d / ctrl+u", "Half a page down / up"},
 		{"12 enter", "Go to task 12"},
 	}},
 	{"Looking", [][2]string{
@@ -258,7 +260,7 @@ var helpGroups = []struct {
 		{"ctrl+z", "Suspend to the shell"},
 		{"?", "This help"},
 		{"q", "Quit (asks first)"},
-		{"ctrl+c / ctrl+d", "Quit (press twice)"},
+		{"ctrl+c", "Quit (press twice)"},
 	}},
 }
 

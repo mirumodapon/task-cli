@@ -79,54 +79,102 @@ func (m Model) editTaskCmd(t task.Task) tea.Cmd {
 	})
 }
 
-// updateDetail handles keys while a task is open. Every key but E closes the
-// view: it is a look, not a place to be.
+// detailFit is how many lines of the task fit: the frame less the blank line
+// above the hint and the hint itself.
+func (m Model) detailFit() int { return max(1, m.height-2) }
+
+// updateDetail handles keys while a task is open. Moving scrolls it, E edits it,
+// and everything else closes it — the same bargain the help makes, because a
+// description can be longer than the screen and still has to be readable.
 func (m Model) updateDetail(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 	t, ok := m.current()
-	if msg.String() != "E" || !ok {
+	if !ok {
 		m.mode = modeList
 		return m, nil
 	}
-	return m, m.editTaskCmd(t)
+	lines := len(m.detailLines(t))
+	switch msg.String() {
+	case "E":
+		return m, m.editTaskCmd(t)
+	case "j", "down", "ctrl+n":
+		m.detailOffset++
+	case "k", "up", "ctrl+p":
+		m.detailOffset--
+	case "ctrl+f", "pgdown":
+		m.detailOffset += m.detailFit()
+	case "ctrl+b", "pgup":
+		m.detailOffset -= m.detailFit()
+	case "ctrl+d":
+		m.detailOffset += max(1, m.detailFit()/2)
+	case "ctrl+u":
+		m.detailOffset -= max(1, m.detailFit()/2)
+	case "g":
+		m.detailOffset = 0
+	case "G":
+		m.detailOffset = lines
+	default:
+		m.mode = modeList
+		return m, nil
+	}
+	m.detailOffset = max(0, min(m.detailOffset, lines-m.detailFit()))
+	return m, nil
 }
 
-var detailHint = styleHint.Render("E edit the task in $EDITOR · any other key goes back")
+var (
+	detailHint       = styleHint.Render("E edit the task in $EDITOR · any other key goes back")
+	detailScrollHint = styleHint.Render("j/k for more · E edit in $EDITOR · any other key goes back")
+)
+
+// detailLines renders the whole task as lines. Scrolling then works on lines,
+// so a wrapped description scrolls by what is on screen rather than by what it
+// was before it was wrapped.
+func (m Model) detailLines(t task.Task) []string {
+	rows := m.detailRows(t)
+	var w int
+	for _, r := range rows {
+		w = max(w, lipgloss.Width(r[0]))
+	}
+	out := []string{fmt.Sprintf("#%d  %s", t.ID, t.Title), ""}
+	for _, r := range rows {
+		out = append(out, "  "+styleDim.Render(pad(r[0], w))+"  "+r[1])
+	}
+	out = append(out, "")
+	if t.Desc == "" {
+		return append(out, styleDim.Render("  No description"))
+	}
+	// The description is wrapped to the frame: a long line would otherwise wrap
+	// itself and push the lines below it off the bottom of the screen.
+	for _, line := range strings.Split(t.Desc, "\n") {
+		if line == "" {
+			out = append(out, "")
+			continue
+		}
+		// Width pads every rendered line out to the full frame, so the padding is
+		// trimmed back off: trailing spaces are invisible until something copies them.
+		for _, wrapped := range strings.Split(styleDescBody.Width(max(3, m.width)).Render(line), "\n") {
+			out = append(out, strings.TrimRight(wrapped, " "))
+		}
+	}
+	return out
+}
 
 func (m Model) viewDetail() string {
 	t, ok := m.current()
 	if !ok {
 		return m.viewList()
 	}
-	rows := m.detailRows(t)
-	var w int
-	for _, r := range rows {
-		w = max(w, lipgloss.Width(r[0]))
+	lines := m.detailLines(t)
+	fit := m.detailFit()
+	scrolls := len(lines) > fit
+	if scrolls {
+		start := min(m.detailOffset, len(lines)-fit)
+		lines = lines[start : start+fit]
 	}
-
-	var b strings.Builder
-	fmt.Fprintf(&b, "#%d  %s\n\n", t.ID, t.Title)
-	for _, r := range rows {
-		b.WriteString("  " + styleDim.Render(pad(r[0], w)) + "  " + r[1] + "\n")
+	hint := detailHint
+	if scrolls {
+		hint = detailScrollHint
 	}
-	b.WriteString("\n")
-	if t.Desc == "" {
-		b.WriteString(styleDim.Render("  No description") + "\n")
-		return m.screen(b.String(), m.hint(detailHint))
-	}
-	// The description is wrapped to the frame: a long line would otherwise wrap
-	// itself and push the rows below it off the bottom of the screen.
-	for _, line := range strings.Split(t.Desc, "\n") {
-		if line == "" {
-			b.WriteString("\n")
-			continue
-		}
-		// Width pads every rendered line out to the full frame, so the padding is
-		// trimmed back off: trailing spaces are invisible until something copies them.
-		for _, wrapped := range strings.Split(styleDescBody.Width(max(3, m.width)).Render(line), "\n") {
-			b.WriteString(strings.TrimRight(wrapped, " ") + "\n")
-		}
-	}
-	return m.screen(b.String(), m.hint(detailHint))
+	return m.screen(strings.Join(lines, "\n")+"\n", m.hint(hint))
 }
 
 // editorFunc hands text to an editor and returns the cmd that produces the
