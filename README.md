@@ -47,7 +47,7 @@ on any platform Go targets.
 
 ```
 $ task --version
-task v1.0.0 (a1b2c3d)
+task v1.1.0 (a1b2c3d)
 built with go1.26.4 for darwin/arm64
 ```
 
@@ -55,8 +55,8 @@ The hash in brackets is the commit it was built from, which is what turns
 "v1.0.0" into something you can go and look at.
 
 `make build` and `make install` ask git for it — `git describe --tags --dirty`
-— so a build from the tag says `v1.0.0`, one three commits past it says
-`v1.0.0-3-gabc1234`, and one with uncommitted changes says `-dirty`. A version
+— so a build from the tag says `v1.1.0`, one three commits past it says
+`v1.1.0-3-gabc1234`, and one with uncommitted changes says `-dirty`. A version
 written into the source would be a thing to forget, and a forgotten one lies.
 
 A `go build` that skips the Makefile has nothing stamped into it and falls back
