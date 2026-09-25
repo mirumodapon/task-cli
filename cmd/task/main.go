@@ -70,7 +70,10 @@ func run() int {
 		In:    os.Stdin,
 		Now:   time.Now,
 		Cwd:   cwd,
-		Color: resolveColor(os.Getenv("NO_COLOR"), os.Getenv("CLICOLOR_FORCE"), isTTY(os.Stdout)),
+		// prune -b puts its backup beside the database, so it needs to know
+		// which database this run opened.
+		DBPath: dbPath,
+		Color:  resolveColor(os.Getenv("NO_COLOR"), os.Getenv("CLICOLOR_FORCE"), isTTY(os.Stdout)),
 	}
 	app.RunTUI = func(start task.Filter, dates bool) error {
 		return tui.Run(st, app.Now, cwd, tui.Start{Filter: start, Dates: dates})

@@ -47,7 +47,7 @@ on any platform Go targets.
 
 ```
 $ task --version
-task v1.1.0 (a1b2c3d)
+task v1.2.0 (a1b2c3d)
 built with go1.26.4 for darwin/arm64
 ```
 
@@ -55,8 +55,8 @@ The hash in brackets is the commit it was built from, which is what turns
 "v1.0.0" into something you can go and look at.
 
 `make build` and `make install` ask git for it — `git describe --tags --dirty`
-— so a build from the tag says `v1.1.0`, one three commits past it says
-`v1.1.0-3-gabc1234`, and one with uncommitted changes says `-dirty`. A version
+— so a build from the tag says `v1.2.0`, one three commits past it says
+`v1.2.0-3-gabc1234`, and one with uncommitted changes says `-dirty`. A version
 written into the source would be a thing to forget, and a forgotten one lies.
 
 A `go build` that skips the Makefile has nothing stamped into it and falls back
@@ -74,6 +74,7 @@ task undone <id>...             Mark tasks as not done
 task edit <id> [new title]      Change a task
 task rm <id>...                 Delete tasks; -f destroys them
 task restore <id>...            Bring deleted tasks back
+task prune [flags]              Remove done tasks; -f destroys them, -b backs them up
 task export, dump [flags]       Write tasks out as txt, json, yaml or sql
 task import [file]              Read a json or yaml dump back in
 task projects                   Projects with their open counts
@@ -149,6 +150,38 @@ task rm -f 3            # destroyed; nothing brings this one back
 A delete one keystroke away from every other command should be something you
 can take back, and `-f` is where that stops being true. `task details 3` finds a
 deleted task and says so, so you can look before deciding.
+
+`prune` is `rm` for everything already done. It takes the filters `ls` takes,
+and their defaults with them, so `task ls --done` with the same flags is an
+exact preview of what `prune` will take:
+
+```sh
+task prune                    # done uncategorized tasks, into the bin
+task prune -p                 # this directory's project instead
+task prune -t chore --all-projects
+task ls -a --deleted          # what prune put there
+task prune -f                 # destroyed outright
+task prune --deleted -f       # and this empties the bin of done tasks
+```
+
+`-b` writes what is about to go to a SQLite file first. With a value that value
+is the file; with none, the name is the time and the place is beside the task
+database — `~/.todo/20260925T143000_db.sqlite` unless `--db` or `$TASK_DB` moved
+it, which keeps a backup with the database it came from:
+
+```sh
+task prune -f -b                          # ~/.todo/<datetime>_db.sqlite
+task prune -f -b ~/backups/done.sqlite    # or say where
+task --db ~/backups/done.sqlite ls -a --all-projects
+```
+
+What it writes is a task database, not a dump: the ids are the ids the tasks
+had, so the backup can be read straight back with `--db` and compared against
+the list it came out of. It holds only what was pruned, which with a filter in
+play is the useful thing to keep. An existing file is never written over — a
+backup folded into an older backup is the one failure a backup must not have —
+and the file is written before anything is removed, so a backup that fails
+leaves the list exactly as it was.
 
 `edit` touches only the fields you pass, so an omitted flag and an empty value
 mean different things:

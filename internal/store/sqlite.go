@@ -74,7 +74,12 @@ func migrate(db *sql.DB) error {
 type sqlStore struct{ db *sql.DB }
 
 // OpenSQLite opens, and creates if needed, the database. path may be a file path or ":memory:".
-func OpenSQLite(path string) (Store, error) {
+func OpenSQLite(path string) (Store, error) { return openSQLite(path) }
+
+// openSQLite is OpenSQLite with the concrete type kept, which is what Snapshot
+// needs: writing a backup means reaching past the Store interface to insert
+// rows exactly as they were, ids and all.
+func openSQLite(path string) (*sqlStore, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
 		return nil, err

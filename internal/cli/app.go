@@ -26,6 +26,9 @@ type App struct {
 	Now   func() time.Time
 	Cwd   string
 	Color bool
+	// DBPath is where the database being worked on lives. prune -b puts its
+	// backup beside it, so a --db elsewhere does not scatter backups into ~/.todo.
+	DBPath string
 	// RunTUI and RunMCP are injected by cmd/task. cli imports neither tui nor
 	// mcp; the three stay siblings over the same Store. RunTUI is handed the
 	// filter to open on, which is why it speaks task.Filter and not a tui type.
@@ -101,6 +104,7 @@ func (a *App) commandList() []command {
 		{name: "edit", args: "<id> [new title]", summary: "Change a task. Only the fields you pass are touched.", flags: addFlags, run: a.cmdEdit},
 		{name: "rm", args: "<id>...", summary: "Delete tasks. The row stays until -f, so a delete can be taken back.", flags: rmFlags, run: a.cmdRm},
 		{name: "restore", args: "<id>...", summary: "Bring deleted tasks back.", run: a.cmdRestore},
+		{name: "prune", summary: "Remove done tasks. The rows stay until -f; -b backs them up first.", flags: pruneFlags, run: a.cmdPrune},
 		{name: "export", aliases: []string{"dump"}, summary: "Write tasks out as txt, json, yaml or sql.", flags: exportFlags, run: a.cmdExport},
 		{name: "import", args: "[file]", summary: "Read a json or yaml dump back in, as new tasks.", flags: importFlags, run: a.cmdImport},
 		{name: "projects", summary: "List projects with their open task counts.", run: a.cmdProjects},
